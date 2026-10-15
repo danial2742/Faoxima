@@ -21,7 +21,7 @@ services:
     environment:
       DOMAIN: ${DOMAIN}
       URL_PATH: ${URL_PATH:-faoxima}
-      DOC_ROOT: /var/www/faoxima
+      DOC_ROOT: /var/www
       APP_UPSTREAM: app:9000
       NGINX_ENVSUBST_FILTER: "^(DOMAIN|URL_PATH|DOC_ROOT|APP_UPSTREAM)$$"
     volumes:
