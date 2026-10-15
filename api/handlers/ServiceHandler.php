@@ -287,6 +287,7 @@ final class ServiceHandler extends BaseHandler
             }
         }
         unset($configEntry);
+        $config = faoxima_wg_postprocess($config);
 
         $lastUpdate = null;
         if (!empty($remote['sub_updated_at'])) {
@@ -633,6 +634,7 @@ final class ServiceHandler extends BaseHandler
                 $output[] = ['type' => 'config', 'value' => $content];
             }
         }
+        $output = faoxima_wg_postprocess($output);
 
 
         $expirationDate = 'نامحدود';

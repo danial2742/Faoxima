@@ -150,3 +150,79 @@ if (!function_exists('faoxima_build_service_output')) {
         return $output;
     }
 }
+
+if (!function_exists('faoxima_wg_postprocess')) {
+    /**
+     * WireGuard / AmneziaWG accounts: drop subscription `link` entries (meaningless for
+     * conf-based services) and append one AmneziaVPN `vpn_key` entry per conf found.
+     * $extraConfs: raw conf texts known to the caller (e.g. x-ui single_config_file, WGDashboard conf).
+     */
+    function faoxima_wg_postprocess(array $output, array $extraConfs = []): array
+    {
+        if (!function_exists('amnezia_vpn_key_from_conf') || !function_exists('rx_is_wg_account')) {
+            return $output;
+        }
+
+        $confs = [];
+        $addConf = static function ($conf) use (&$confs): void {
+            if (is_string($conf) && stripos($conf, '[Interface]') !== false) {
+                $confs[md5($conf)] = $conf;
+            }
+        };
+        foreach ($extraConfs as $c) {
+            $addConf($c);
+        }
+
+        $isWg = !empty($confs);
+        foreach ($output as $entry) {
+            $type  = (string)($entry['type'] ?? '');
+            $value = $entry['value'] ?? '';
+            if ($type === 'file' && is_string($value)) {
+                if (preg_match('#^data:[^;,]*;base64,(.*)$#s', $value, $m)) {
+                    $value = (string)base64_decode($m[1], true);
+                }
+                $addConf($value);
+            } elseif ($type === 'text' && is_string($value)) {
+                $addConf($value);
+            } elseif ($type === 'config') {
+                foreach ((array)$value as $link) {
+                    if (!is_string($link)) {
+                        continue;
+                    }
+                    if (preg_match('#^\s*(wireguard|wg|vpn|awg|amneziawg|xuifile|xuiawgfile)://#i', $link)) {
+                        $isWg = true;
+                    }
+                    if (function_exists('xui_wg_conf_from_link')) {
+                        $parsed = xui_wg_conf_from_link($link);
+                        if (is_array($parsed)) {
+                            $addConf($parsed['conf']);
+                        }
+                    }
+                }
+            }
+        }
+        if (!empty($confs)) {
+            $isWg = true;
+        }
+        if (!$isWg) {
+            return $output;
+        }
+
+        $output = array_values(array_filter($output, static function ($entry) {
+            return ($entry['type'] ?? '') !== 'link';
+        }));
+
+        foreach ($confs as $conf) {
+            $key = amnezia_vpn_key_from_conf($conf, '');
+            if ($key === null) {
+                continue;
+            }
+            $output[] = [
+                'type'  => 'vpn_key',
+                'value' => $key,
+                'label' => preg_match('/^\s*(Jc|Jmin|Jmax|S1|S2|H1)\s*=/mi', $conf) ? 'AmneziaWG' : 'WireGuard',
+            ];
+        }
+        return $output;
+    }
+}

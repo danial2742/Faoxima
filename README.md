@@ -147,6 +147,17 @@
 
 </div>
 
+### 🐳 نصب با Docker
+
+```sh
+make setup      # ساخت .env و اجرای سرویس‌ها
+# فایل .env را ویرایش کنید (DOMAIN، MYSQL_*، TELEGRAM_BOT_TOKEN، TELEGRAM_ADMIN_ID)
+make restart
+make cert       # دریافت گواهی SSL معتبر (Let's Encrypt)
+```
+
+لیست کامل دستورات: `make help` — مستندات تکمیلی در [docker/README.md](docker/README.md).
+
 ---
 
 ## 💸 حمایت مالی (Donate)

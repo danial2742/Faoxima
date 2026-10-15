@@ -9,7 +9,7 @@ elif locale -a 2>/dev/null | grep -qi '^C\.UTF-8$'; then
 fi
 
 readonly FAOXIMA_VERSION="1.1.5"
-readonly FAOXIMA_REPO="Mmd-Amir/Faoxima"
+readonly FAOXIMA_REPO="danial2742/Faoxima"
 readonly FAOXIMA_GITHUB="https://github.com/${FAOXIMA_REPO}"
 readonly FAOXIMA_TELEGRAM="https://t.me/faoxima"
 

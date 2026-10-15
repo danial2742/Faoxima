@@ -463,12 +463,25 @@ function rxDeliveryAvailability($panel_info, $config, $sub_link)
             ];
         }
         $hasSub = isset($manual['sub']) && trim((string) $manual['sub']) !== '';
+        if ($hasSub) {
+            $manualWgProbe = [];
+            foreach ((isset($manual['items']) && is_array($manual['items']) ? $manual['items'] : []) as $manualWgItem) {
+                $manualWgProbe[] = (string) ($manualWgItem['content'] ?? '');
+            }
+            $manualWgProbe[] = (string) ($manual['content'] ?? '');
+            if (rx_is_wg_account($manualWgProbe)) {
+                $hasSub = false;
+            }
+        }
         $validConfigs = isset($manual['configs']) && is_array($manual['configs']) ? array_values(array_filter($manual['configs'], function ($item) {
             return is_string($item) && trim($item) !== '';
         })) : [];
         return ['sub' => $hasSub, 'config' => !empty($validConfigs)];
     }
     $hasSub = (($panel_info['sublink'] ?? '') == "onsublink") && is_string($sub_link) && trim($sub_link) !== '';
+    if ($hasSub && rx_is_wg_account($config, null, $panel_info)) {
+        $hasSub = false;
+    }
     $validConfigs = is_array($config) ? array_values(array_filter($config, function ($item) {
         return is_string($item) && trim($item) !== '';
     })) : [];
@@ -499,6 +512,10 @@ function sendMessageService($panel_info, $config, $sub_link, $username_service, 
 {
     global $setting, $from_id;
     $config = normalizeServiceConfigs($config);
+    $isWgService = ($panel_info['type'] ?? '') !== 'Manualsale' && rx_is_wg_account($config, null, $panel_info);
+    if ($isWgService) {
+        $sub_link = '';
+    }
     if (!check_active_btn($setting['keyboardmain'], "text_help"))
         $reply_markup = null;
     $user_id = $user_id == null ? $from_id : $user_id;
@@ -549,6 +566,9 @@ function sendMessageService($panel_info, $config, $sub_link, $username_service, 
                         'parse_mode' => 'HTML',
                     ]);
                     @unlink($manualFile);
+                    if (strtolower($ext) === 'conf') {
+                        rx_send_amnezia_key($user_id, (string) ($fi['content'] ?? ''), $username_service);
+                    }
                 } else {
                     sendmessage($user_id, $thisCaption, $fileReplyMarkup, 'HTML');
                 }
@@ -579,7 +599,7 @@ function sendMessageService($panel_info, $config, $sub_link, $username_service, 
             if (!is_array($kb) || !isset($kb['inline_keyboard']) || !is_array($kb['inline_keyboard'])) {
                 $kb = ['inline_keyboard' => []];
             }
-            if (!function_exists('isQrDisabled') || !isQrDisabled()) {
+            if (!$isWgService && (!function_exists('isQrDisabled') || !isQrDisabled())) {
                 array_unshift($kb['inline_keyboard'], [['text' => faoxima_textbot_get('dyn_purchase_qr_code_btn', '📷 دریافت QR Code'), 'callback_data' => 'infocard_qr_' . $invoice_id]]);
             }
             $cardKeyboard = json_encode($kb, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

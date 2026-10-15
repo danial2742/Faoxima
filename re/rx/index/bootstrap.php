@@ -1818,6 +1818,15 @@ if ($text == "version") {
             }
         }
         $manualHasSub = trim((string) $manualDelivery['sub']) !== '';
+        if ($manualHasSub) {
+            $manualWgProbe = [(string) ($manualDelivery['content'] ?? '')];
+            foreach ((is_array($manualDelivery['items'] ?? null) ? $manualDelivery['items'] : []) as $manualWgItem) {
+                $manualWgProbe[] = (string) ($manualWgItem['content'] ?? '');
+            }
+            if (rx_is_wg_account($manualWgProbe)) {
+                $manualHasSub = false;
+            }
+        }
         $textinfo = "وضعیت سرویس : <b>$status_var</b>
 نام کاربری سرویس : {$DataUserOut['username']}
 📎 کد پیگیری سرویس : {$nameloc['id_invoice']}
@@ -1999,6 +2008,9 @@ $nameconfig";
             unset($keyboarddate['changestatus']);
             unset($keyboarddate['change-location']);
             unset($keyboarddate['changelink']);
+        }
+        if ($marzban['type'] == "x-ui_single" && rx_is_wg_account($DataUserOut['links'] ?? [], $DataUserOut['single_config_file'] ?? null)) {
+            unset($keyboarddate['linksub']);
         }
         if ($marzban['type'] == "remnawave") {
             if (($marzban['remna_revoke'] ?? 'off') !== "on") {
@@ -2358,7 +2370,11 @@ $nameconfig";
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $nameloc['Service_location'], "select");
     if (($marzban_list_get['type'] ?? '') == "Manualsale") {
         $manualDelivery = rxManualsaleDelivery($nameloc['username']);
-        if (trim((string) $manualDelivery['sub']) === '') {
+        $manualWgProbe = [(string) ($manualDelivery['content'] ?? '')];
+        foreach ((is_array($manualDelivery['items'] ?? null) ? $manualDelivery['items'] : []) as $manualWgItem) {
+            $manualWgProbe[] = (string) ($manualWgItem['content'] ?? '');
+        }
+        if (trim((string) $manualDelivery['sub']) === '' || rx_is_wg_account($manualWgProbe)) {
             sendmessage($from_id, $datatextbot['dyn_errors_config_read_error'] ?? "❌  خطا در خواندن اطلاعات کانفیگ با پشتیبانی در ارتباط باشید.", null, 'html');
             return;
         }
@@ -2389,8 +2405,12 @@ $nameconfig";
         return;
     }
     $subscriptionurl = $DataUserOut['subscription_url'];
+    if ($marzban_list_get['type'] != "WGDashboard" && rx_is_wg_account($DataUserOut['links'] ?? [], $DataUserOut['single_config_file'] ?? null)) {
+        sendmessage($from_id, "ℹ️ این سرویس لینک اشتراک ندارد. از گزینه «دریافت کانفیگ» استفاده کنید.", null, 'html');
+        return;
+    }
     if ($marzban_list_get['type'] == "WGDashboard") {
-        $textsub = "qrcode اشتراک شما";
+        $textsub = "🔐 کانفیگ WireGuard شما";
     } else {
         $textsub = "
 {$textbotlang['users']['stateus']['linksub']}
@@ -2411,7 +2431,7 @@ $nameconfig";
         'text' => $textbotlang['users']['stateus']['backinfo'],
         'callback_data' => "productcheckdata",
     ]];
-    $subCopyKb = rx_copy_button_keyboard($subscriptionurl, '📋 کپی لینک اشتراک', [$subBackRow]);
+    $subCopyKb = $marzban_list_get['type'] == "WGDashboard" ? null : rx_copy_button_keyboard($subscriptionurl, '📋 کپی لینک اشتراک', [$subBackRow]);
     if ($subCopyKb !== null) {
         $bakinfos = $subCopyKb;
     }
@@ -2422,6 +2442,7 @@ $nameconfig";
         file_put_contents($urlimage, $DataUserOut['subscription_url']);
         sendDocument($from_id, $urlimage, "⚙️ کانفیگ شما");
         unlink($urlimage);
+        rx_send_amnezia_key($from_id, (string) $DataUserOut['subscription_url'], $nameloc['username']);
     } elseif ((!function_exists('isQrDisabled') || !isQrDisabled())
         && !(function_exists('nmPanelNationalEnabled') && nmPanelNationalEnabled($marzban_list_get))
         && trim((string) $subscriptionurl) !== '') {
@@ -2691,6 +2712,7 @@ $nameconfig";
                         'parse_mode' => 'HTML',
                     ]);
                     unlink($allWgDest);
+                    rx_send_amnezia_key($from_id, $allWgConf['conf'], $nameloc['username']);
                     continue;
                 }
             }
@@ -2714,6 +2736,7 @@ $nameconfig";
             'parse_mode' => 'HTML',
         ]);
         unlink($xuiFileDest);
+        rx_send_amnezia_key($from_id, (string) $singleConfigFile['value'], $nameloc['username']);
         return;
     }
     if (function_exists('xui_wg_conf_from_link')) {
@@ -2730,6 +2753,7 @@ $nameconfig";
                 'parse_mode' => 'HTML',
             ]);
             unlink($xuiWgDest);
+            rx_send_amnezia_key($from_id, $xuiWgConf['conf'], $nameloc['username']);
             return;
         }
     }

@@ -417,6 +417,10 @@ final class PurchaseHandler extends BaseHandler
                     $stockOutput[] = ['type' => 'config', 'value' => $stockContent];
                 }
             }
+            $stockOutput = faoxima_wg_postprocess($stockOutput);
+            if (rx_is_wg_account([$stockContent])) {
+                $stockSubLink = '';
+            }
             $payload = [
                 'success'  => true,
                 'status'   => true,
@@ -680,6 +684,18 @@ final class PurchaseHandler extends BaseHandler
                 'sub_link'   => (string)$subLink,
                 'configs'    => $configsArr,
             ]);
+        }
+        $wgExtraConfs = [];
+        if (is_array($remote['single_config_file'] ?? null)) {
+            $wgExtraConfs[] = (string)($remote['single_config_file']['value'] ?? '');
+        }
+        if (($panel['type'] ?? '') === 'WGDashboard') {
+            $wgExtraConfs[] = (string)($remote['subscription_url'] ?? '');
+        }
+        $serviceOutput = faoxima_wg_postprocess($serviceOutput, $wgExtraConfs);
+        if (rx_is_wg_account($configsArr, $remote['single_config_file'] ?? null, $panel)
+            || rx_is_wg_account([(string)($remote['subscription_url'] ?? '')])) {
+            $subLink = '';
         }
 
         $payload = [

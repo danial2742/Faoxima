@@ -1789,6 +1789,176 @@ if (!function_exists('rx_copy_button_keyboard')) {
     }
 }
 
+if (!function_exists('amnezia_vpn_key_from_conf')) {
+    /**
+     * Build an AmneziaVPN import key (vpn://...) from a WireGuard / AmneziaWG .conf.
+     * Returns null when the conf cannot be parsed.
+     */
+    function amnezia_vpn_key_from_conf($conf, $description = '')
+    {
+        if (!is_string($conf) || stripos($conf, '[Interface]') === false) {
+            return null;
+        }
+        $iface = array();
+        $peer = array();
+        $section = '';
+        foreach (preg_split('/\r\n|\r|\n/', $conf) as $line) {
+            $line = trim($line);
+            if ($line === '' || $line[0] === '#') {
+                continue;
+            }
+            if (strcasecmp($line, '[Interface]') === 0) {
+                $section = 'i';
+                continue;
+            }
+            if (strcasecmp($line, '[Peer]') === 0) {
+                $section = 'p';
+                continue;
+            }
+            $eq = strpos($line, '=');
+            if ($eq === false || $section === '') {
+                continue;
+            }
+            $k = strtolower(trim(substr($line, 0, $eq)));
+            $v = trim(substr($line, $eq + 1));
+            if ($section === 'i') {
+                $iface[$k] = $v;
+            } else {
+                $peer[$k] = $v;
+            }
+        }
+        if (empty($iface['privatekey']) || empty($peer['publickey']) || empty($peer['endpoint'])) {
+            return null;
+        }
+
+        $endpoint = $peer['endpoint'];
+        $cp = strrpos($endpoint, ':');
+        if ($cp === false) {
+            return null;
+        }
+        $host = trim(substr($endpoint, 0, $cp), '[]');
+        $port = substr($endpoint, $cp + 1);
+
+        $awgKeys = array('jc' => 'Jc', 'jmin' => 'Jmin', 'jmax' => 'Jmax', 's1' => 'S1', 's2' => 'S2', 's3' => 'S3', 's4' => 'S4', 'h1' => 'H1', 'h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'i1' => 'I1', 'i2' => 'I2', 'i3' => 'I3', 'i4' => 'I4', 'i5' => 'I5');
+        $awg = array();
+        foreach ($awgKeys as $lk => $name) {
+            if (isset($iface[$lk]) && $iface[$lk] !== '') {
+                $awg[$name] = $iface[$lk];
+            }
+        }
+        $isAwg = !empty($awg);
+
+        $clientPub = '';
+        if (function_exists('sodium_crypto_scalarmult_base')) {
+            $raw = base64_decode($iface['privatekey'], true);
+            if ($raw !== false && strlen($raw) === 32) {
+                $clientPub = base64_encode(sodium_crypto_scalarmult_base($raw));
+            }
+        }
+
+        $dns = isset($iface['dns']) ? array_values(array_filter(array_map('trim', explode(',', $iface['dns'])))) : array();
+        $clientIp = isset($iface['address']) ? trim(explode(',', $iface['address'])[0]) : '';
+        $clientIp = explode('/', $clientIp)[0];
+
+        $lastConfig = array_merge(array(
+            'config' => $conf,
+            'hostName' => $host,
+            'port' => (int) $port,
+            'client_priv_key' => $iface['privatekey'],
+            'client_pub_key' => $clientPub,
+            'client_ip' => $clientIp,
+            'server_pub_key' => $peer['publickey'],
+            'psk_key' => $peer['presharedkey'] ?? '',
+            'allowed_ips' => array_values(array_filter(array_map('trim', explode(',', $peer['allowedips'] ?? '0.0.0.0/0, ::/0')))),
+            'persistent_keep_alive' => $peer['persistentkeepalive'] ?? '25',
+        ), isset($iface['mtu']) ? array('mtu' => $iface['mtu']) : array(), $awg);
+
+        $key = $isAwg ? 'awg' : 'wireguard';
+        $containerName = $isAwg ? 'amnezia-awg' : 'amnezia-wireguard';
+        $containerData = array_merge(array(
+            'last_config' => json_encode($lastConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'port' => (string) $port,
+            'transport_proto' => 'udp',
+        ), $awg);
+
+        $payload = array(
+            'containers' => array(array('container' => $containerName, $key => $containerData)),
+            'defaultContainer' => $containerName,
+            'description' => (string) $description,
+            'hostName' => $host,
+        );
+        if (isset($dns[0])) {
+            $payload['dns1'] = $dns[0];
+        }
+        if (isset($dns[1])) {
+            $payload['dns2'] = $dns[1];
+        }
+
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($json === false) {
+            return null;
+        }
+        $packed = pack('N', strlen($json)) . gzcompress($json, 8);
+        return 'vpn://' . rtrim(strtr(base64_encode($packed), '+/', '-_'), '=');
+    }
+}
+
+if (!function_exists('rx_is_wg_account')) {
+    /**
+     * True when the delivered account is WireGuard / AmneziaWG (conf-based), where a
+     * subscription URL is meaningless. $configs may hold links, conf text or manual item contents.
+     */
+    function rx_is_wg_account($configs, $singleConfigFile = null, $panel = null)
+    {
+        if (is_array($panel) && ($panel['type'] ?? '') === 'WGDashboard') {
+            return true;
+        }
+        if (is_array($singleConfigFile) && !empty($singleConfigFile)) {
+            return true;
+        }
+        if (!is_array($configs)) {
+            $configs = array($configs);
+        }
+        foreach ($configs as $item) {
+            if (!is_string($item)) {
+                continue;
+            }
+            if (preg_match('#^\s*(wireguard|wg|vpn|awg|amneziawg|xuifile|xuiawgfile)://#i', $item)
+                || stripos($item, '[Interface]') !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+if (!function_exists('rx_send_amnezia_key')) {
+    /**
+     * After a WireGuard/AmneziaWG .conf is sent, also send the AmneziaVPN import key.
+     * Never throws; failure to build the key is silent.
+     */
+    function rx_send_amnezia_key($chat_id, $conf, $description = '')
+    {
+        $vpnKey = amnezia_vpn_key_from_conf($conf, $description);
+        if ($vpnKey === null) {
+            return;
+        }
+        $hint = "🔑 کلید ورود به برنامه AmneziaVPN\nبرنامه AmneziaVPN را باز کنید، «افزودن سرور» (+) را بزنید، کلید زیر را کپی و وارد کنید.";
+        if (strlen($vpnKey) > 3500) {
+            $tmp = "{$chat_id}-" . bin2hex(random_bytes(3)) . '-amnezia-key.txt';
+            file_put_contents($tmp, $vpnKey);
+            telegram('sendDocument', array(
+                'chat_id' => $chat_id,
+                'document' => new CURLFile($tmp, 'text/plain', 'amnezia-key.txt'),
+                'caption' => $hint,
+            ));
+            unlink($tmp);
+            return;
+        }
+        sendmessage($chat_id, $hint . "\n\n<code>{$vpnKey}</code>", null, 'HTML');
+    }
+}
+
 function createqrcode($contents)
 {
     if (is_array($contents)) {

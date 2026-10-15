@@ -11,17 +11,50 @@ services:
     logging: *runtime-logging
     image: nginx:1.27-alpine
     depends_on:
-      - app
+      app:
+        condition: service_started
+      certinit:
+        condition: service_completed_successfully
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      URL_PATH: ${URL_PATH:-faoxima}
+      DOC_ROOT: /var/www/faoxima
+      APP_UPSTREAM: app:9000
+      NGINX_ENVSUBST_FILTER: "^(DOMAIN|URL_PATH|DOC_ROOT|APP_UPSTREAM)$$"
     volumes:
       - .:/var/www/faoxima:ro
-      - ${BOTS_DIR}:/var/www/bots:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ${BOTS_DIR:-./bots}:/var/www/bots:ro
+      - ./docker/nginx/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./docker/nginx/bot.conf.template:/etc/nginx/templates/bots/faoxima.conf.template:ro
       - certs:/etc/letsencrypt:ro
       - certbot_webroot:/var/www/certbot:ro
     restart: unless-stopped
+
+  certinit:
+    image: certbot/certbot
+    entrypoint: ["sh", "/init-cert.sh"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - certs:/etc/letsencrypt
+      - ./docker/certbot/init-cert.sh:/init-cert.sh:ro
+    restart: "no"
+
+  certissue:
+    image: certbot/certbot
+    profiles: ["certissue"]
+    entrypoint: ["sh", "/issue-cert.sh"]
+    environment:
+      DOMAIN: ${DOMAIN}
+      CERTBOT_EMAIL: ${CERTBOT_EMAIL:-}
+    volumes:
+      - certs:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+      - ./docker/certbot/issue-cert.sh:/issue-cert.sh:ro
+    restart: "no"
 
   app:
     logging: *runtime-logging

@@ -2498,6 +2498,29 @@ export function renderOutput(o) {
         `;
     }
 
+    if (type === 'vpn_key') {
+        const key = String(o.value || '');
+        if (key === '') return '';
+        const label = escapeHtml(String(o.label || 'AmneziaVPN'));
+        return `
+            <div class="sub-card">
+                <p class="section-title">${icon('config')} کلید ورود به AmneziaVPN (${label})</p>
+                <p class="muted" style="font-size:12px;margin:0 0 8px">در برنامه AmneziaVPN گزینه افزودن سرور را بزنید و این کلید را وارد کنید.</p>
+                <div class="cfg-list" style="display:flex;flex-direction:column;gap:10px">
+                    <div class="cfg-item">
+                        <button type="button" class="cfg-toggle btn btn-ghost btn-block" data-i="0" style="display:flex;justify-content:space-between;align-items:center;text-align:start;gap:8px">
+                            <span>${icon('config', 'class="ico ico-sm"')} کلید AmneziaVPN</span>
+                            <span class="muted" style="font-size:12px;white-space:nowrap">${icon('download', 'class="ico ico-sm"')} دریافت کلید</span>
+                        </button>
+                        <div class="cfg-detail" data-i="0" style="display:none;margin:8px 0 12px">
+                            <div class="codeblock codeblock--plain" style="white-space:pre-wrap;word-break:break-all">${escapeHtml(key)}<button class="copy-btn" data-copy="${escapeHtml(key)}">${icon('copy', 'class="ico ico-sm"')} کپی</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     if (type === 'password') {
         const pw = String(o.value || '');
         if (pw === '') return '';

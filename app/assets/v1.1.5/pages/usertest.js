@@ -2,7 +2,7 @@ import { call } from '../api.js?v=0.0.53';
 import { escapeHtml, skeletonList, emptyState, copyToClipboard, toast } from '../utils.js?v=0.0.52';
 import { hapticImpact, hapticNotify } from '../telegram.js?v=0.0.52';
 import { icon } from '../icons.js?v=0.0.52';
-import { renderServiceOutputs } from './service.js?v=0.0.53';
+import { renderServiceOutputs } from './service.js?v=0.0.54';
 import { downloadBlob, base64ToBlob } from '../download.js?v=0.0.52';
 
 export async function usertest(view) {
@@ -142,7 +142,7 @@ function renderSuccess($host, obj) {
     const deliveredAsFile = svc.delivered_as_file === true;
     const configs = deliveredAsFile ? [] : (Array.isArray(svc.configs) ? svc.configs : []);
     const rawLink = String(svc.subscription_url || (configs.length ? configs[0] : '') || '');
-    const isLinkLike = /^(https?|vless|vmess|trojan|ss|ssr|hy2|hysteria2?|tuic|wireguard):\/\//i.test(rawLink.trim());
+    const isLinkLike = /^(https?|vless|vmess|trojan|ss|ssr|hy2|hysteria2?|tuic):\/\//i.test(rawLink.trim());
     const linkValue = isLinkLike ? rawLink : '';
     const fileName = String(svc.file_name || '');
     const fileB64 = String(svc.file_content_b64 || '');

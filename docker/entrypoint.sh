@@ -39,4 +39,22 @@ if command -v cron >/dev/null 2>&1; then
     cron
 fi
 
+if [ "$1" = "php-fpm" ]; then
+    # The db healthcheck can pass while mysql is still bootstrapping, so retry.
+    echo "[entrypoint] creating/updating database schema via table.php..."
+    attempt=0
+    until su -s /bin/sh www-data -c "php $APP_DIR/table.php" >/dev/null 2>&1; do
+        attempt=$((attempt + 1))
+        if [ "$attempt" -ge 30 ]; then
+            echo "[entrypoint] table.php still failing after ${attempt} attempts; starting php-fpm anyway." >&2
+            break
+        fi
+        sleep 3
+    done
+    # Second pass finishes dependent migrations (same as install.sh).
+    su -s /bin/sh www-data -c "php $APP_DIR/table.php" >/dev/null 2>&1 || true
+
+    php "$APP_DIR/docker/php-set-webhook.php" || true
+fi
+
 exec "$@"

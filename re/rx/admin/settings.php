@@ -1734,7 +1734,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 17 - سرویس‌هایی که حجم یا زمانشان تمام شده و تمدید نشده‌اند علامت‌گذاری خواهند شد (حذف نهایی پس از ۳۰ روز دیگر از لحظه‌ی تمام‌شدن)
 
 🛡 اگر در عملکرد ربات با باگ یا مشکلی مواجه شدید، از طریق گیت هاب یا گروه فاکسیما اطلاع رسانی کنید
-<a href=\"https://github.com/Mmd-Amir/Faoxima\">لینک گیت هاب</a>";
+<a href=\"https://github.com/danial2742/Faoxima\">لینک گیت هاب</a>";
     $Response = json_encode([
         'inline_keyboard' => [
             [

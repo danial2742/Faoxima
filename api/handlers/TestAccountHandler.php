@@ -242,6 +242,18 @@ final class TestAccountHandler extends BaseHandler
             return is_string($c) ? trim($c) : '';
         }, $configList), static function ($c) { return $c !== ''; }));
 
+        $wgExtraConfs = [];
+        if (is_array($dataoutput['single_config_file'] ?? null)) {
+            $wgExtraConfs[] = (string)($dataoutput['single_config_file']['value'] ?? '');
+        }
+        if (($panel['type'] ?? '') === 'WGDashboard') {
+            $wgExtraConfs[] = (string)($dataoutput['subscription_url'] ?? '');
+        }
+        if (rx_is_wg_account($configsArr, $dataoutput['single_config_file'] ?? null, $panel)
+            || rx_is_wg_account([(string)($dataoutput['subscription_url'] ?? '')])) {
+            $subLink = '';
+        }
+
         $template = $this->resolveTestTemplate((string)($panel['type'] ?? ''));
         if (trim($template) === '') {
             $template = faoxima_textbot_get('dyn_testaccount_default_template', "✅ اکانت تست شما ساخته شد\n\n👤 نام کاربری : {username}\n🌿 نام سرویس : {name_service}\n🇺🇳 لوکیشن : {location}\n⏳ مدت زمان: {day}\n🗜 حجم بسته: {volume}");
@@ -412,7 +424,7 @@ final class TestAccountHandler extends BaseHandler
                 'delivered_as_file' => $manualDelivered,
                 'file_name'         => $manualFileName,
                 'file_content_b64'  => $manualFileB64,
-                'service_output'    => faoxima_build_service_output([
+                'service_output'    => faoxima_wg_postprocess(faoxima_build_service_output([
                     'panel_type'   => (string)($panel['type'] ?? ''),
                     'subscription' => $subLink,
                     'configs'      => $configsArr,
@@ -421,7 +433,7 @@ final class TestAccountHandler extends BaseHandler
                     'file_ext'     => $manualExtForOutput,
                     'items'        => $manualItemsForOutput,
                     'username'     => $usernameAc,
-                ]),
+                ]), $wgExtraConfs),
             ],
         ]);
     }
