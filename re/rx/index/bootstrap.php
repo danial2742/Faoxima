@@ -2040,7 +2040,8 @@ $nameconfig";
         }
         if ($statusremoveserveice == "off")
             unset($keyboarddate['removeservice']);
-        if ($statusshowconfig == "offconfig")
+        $rxXuiWgService = $marzban['type'] == "x-ui_single" && rx_is_wg_account($DataUserOut['links'] ?? [], $DataUserOut['single_config_file'] ?? null);
+        if ($statusshowconfig == "offconfig" && !$rxXuiWgService)
             unset($keyboarddate['config']);
         if ($statusdisorder == "offdisorder")
             unset($keyboarddate['ekhtelal']);

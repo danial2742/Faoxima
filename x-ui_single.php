@@ -120,7 +120,8 @@ if (!function_exists('xui_token_single_link')) {
         }
         foreach ($candidates as $candidate) {
             $candidate = trim((string) $candidate);
-            if ($candidate !== '' && preg_match('/^(vless|vmess|trojan):\/\//i', $candidate)) {
+            $schemes = defined('XUI_SUB_LINK_SCHEMES') ? XUI_SUB_LINK_SCHEMES : '(vless|vmess|trojan|vpn|awg|amneziawg|wireguard|wg)';
+            if ($candidate !== '' && preg_match('/^' . $schemes . ':\/\//i', $candidate)) {
                 return $candidate;
             }
         }
@@ -713,6 +714,15 @@ function get_single_link_smart($panelBase, $inboundId, $subscriptionUrl, $userna
         if (xui_panel_uses_token($panelRowForToken)) {
             $tokenLink = xui_token_single_link($panelRowForToken, $username);
             if ($tokenLink) {
+                $wgFromToken = xui_wg_conf_from_link($tokenLink);
+                if (is_array($wgFromToken)) {
+                    return array(
+                        'type' => 'file',
+                        'value' => $wgFromToken['conf'],
+                        'filename' => xui_wg_conf_filename($tokenLink, $wgFromToken['protocol'], 0),
+                        'protocol' => $wgFromToken['protocol'],
+                    );
+                }
                 return array('type' => 'link', 'value' => $tokenLink);
             }
         }
