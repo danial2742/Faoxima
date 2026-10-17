@@ -2701,7 +2701,7 @@ $nameconfig";
             if (function_exists('xui_wg_conf_from_link')) {
                 $allWgConf = xui_wg_conf_from_link($allConfigItem);
                 if (is_array($allWgConf)) {
-                    $allWgName = normalizeConfigFilename(xui_wg_conf_filename($allConfigItem, $allWgConf['protocol'], $i), $_configgetPanelChk['namecustom'] ?? '', true);
+                    $allWgName = normalizeConfigFilename($nameloc['username'] . ($i > 0 ? '-' . ($i + 1) : '') . '.conf', $_configgetPanelChk['namecustom'] ?? '', true);
                     $allWgDest = "{$from_id}-" . bin2hex(random_bytes(3)) . '-' . $allWgName;
                     file_put_contents($allWgDest, $allWgConf['conf']);
                     $allWgLabel = $allWgConf['protocol'] === 'amneziawg' ? 'AmneziaWG' : 'WireGuard';
@@ -2725,7 +2725,7 @@ $nameconfig";
     $selectedConfig = (string) $DataUserOut['links'][$dataget[2]];
     if ((int) $dataget[2] === 0 && !empty($DataUserOut['single_config_file']) && is_array($DataUserOut['single_config_file'])) {
         $singleConfigFile = $DataUserOut['single_config_file'];
-        $xuiFileName = normalizeConfigFilename($singleConfigFile['filename'], $_configgetPanelChk['namecustom'] ?? '', true);
+        $xuiFileName = normalizeConfigFilename($nameloc['username'] . '.conf', $_configgetPanelChk['namecustom'] ?? '', true);
         $xuiFileDest = "{$from_id}-" . bin2hex(random_bytes(3)) . '-' . $xuiFileName;
         file_put_contents($xuiFileDest, $singleConfigFile['value']);
         telegram('sendDocument', [
@@ -2740,7 +2740,7 @@ $nameconfig";
     if (function_exists('xui_wg_conf_from_link')) {
         $xuiWgConf = xui_wg_conf_from_link($selectedConfig);
         if (is_array($xuiWgConf)) {
-            $xuiWgName = normalizeConfigFilename(xui_wg_conf_filename($selectedConfig, $xuiWgConf['protocol'], (int) $dataget[2]), $_configgetPanelChk['namecustom'] ?? '', true);
+            $xuiWgName = normalizeConfigFilename($nameloc['username'] . '.conf', $_configgetPanelChk['namecustom'] ?? '', true);
             $xuiWgDest = "{$from_id}-" . bin2hex(random_bytes(3)) . '-' . $xuiWgName;
             file_put_contents($xuiWgDest, $xuiWgConf['conf']);
             $xuiWgLabel = $xuiWgConf['protocol'] === 'amneziawg' ? 'AmneziaWG' : 'WireGuard';
