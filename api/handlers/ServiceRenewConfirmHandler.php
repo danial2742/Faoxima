@@ -92,8 +92,9 @@ final class ServiceRenewConfirmHandler extends BaseHandler
         $fxKinds = !empty($custom) ? ['custom_volume', 'custom_time'] : 'product';
         $fxBasePrice = !empty($custom)
             ? fx_custom_base_price($panel, $agent, $product['Volume_constraint'] ?? 0, $product['Service_time'] ?? 0)
-            : $product['price_product'];
+            : (rx_apply_renew_price($product)['price_product']);
         if (empty($custom)) {
+            $product = rx_apply_renew_price($product);
             $product = fx_apply_to_product($product, $panel);
         }
         $product['price_product'] = fx_finalize_amount($product['price_product'], $panel, $fxKinds);

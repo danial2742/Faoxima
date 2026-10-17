@@ -623,6 +623,7 @@ $change_product = json_encode([
     'keyboard' => [
         [
             rx_kb_style(['text' => "قیمت"], 'قیمت', $_rx_pedit_styles),
+            rx_kb_style(['text' => "قیمت تمدید"], 'قیمت', $_rx_pedit_styles),
             rx_kb_style(['text' => "حجم"], 'حجم', $_rx_pedit_styles),
             rx_kb_style(['text' => "زمان"], 'زمان', $_rx_pedit_styles),
         ],

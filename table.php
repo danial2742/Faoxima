@@ -1168,6 +1168,7 @@ try {
         code_product varchar(200)  NULL,
         name_product varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
         price_product varchar(2000) NULL,
+        renew_price varchar(200) NOT NULL DEFAULT '0',
         Volume_constraint varchar(2000) NULL,
         Location varchar(500) NULL,
         Service_time varchar(200) NULL,
@@ -1190,6 +1191,7 @@ try {
         }
     } else {
         addFieldToTable("product", "one_buy_status", "0", "VARCHAR(20)");
+        addFieldToTable("product", "renew_price", "0", "VARCHAR(200)");
         addFieldToTable("product", "Location", null, "VARCHAR(200)");
         addFieldToTable("product", "inbounds", null, "TEXT");
         addFieldToTable("product", "proxies", null, "TEXT");

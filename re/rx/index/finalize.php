@@ -134,6 +134,7 @@ if (isset($update['pre_checkout_query'])) {
     }
     $fxExternalRenewPanel = select("marzban_panel", "*", "name_panel", $user['Processing_value'], "select");
     if (is_array($fxExternalRenewPanel)) {
+        $prodcut = rx_apply_renew_price($prodcut);
         $prodcut = fx_apply_to_product($prodcut, $fxExternalRenewPanel);
         $prodcut['price_product'] = fx_finalize_amount($prodcut['price_product'], $fxExternalRenewPanel, 'product');
         fx_quote_store($from_id, fx_quote_context_key('renew_external', (string) $username . '|' . (string) $codeproduct), fx_finalize_amount(fx_apply_user_discount($prodcut['price_product'], $user['pricediscount']), $fxExternalRenewPanel, 'product'), $fxExternalRenewPanel, 'product');
@@ -180,6 +181,7 @@ if (isset($update['pre_checkout_query'])) {
         sendmessage($from_id, $textbotlang['users']['extend']['renewalerror'], $keyboard, 'HTML');
         return;
     }
+    $prodcut = rx_apply_renew_price($prodcut);
     $prodcut = fx_apply_to_product($prodcut, $marzban_list_get);
     $prodcut['price_product'] = fx_finalize_amount($prodcut['price_product'], $marzban_list_get, 'product');
     $fxExternalRenewKey = fx_quote_context_key('renew_external', (string) $usernamePanelExtends . '|' . (string) $codeproduct);

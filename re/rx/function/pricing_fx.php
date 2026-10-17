@@ -533,6 +533,26 @@ if (!function_exists('fx_adjust_base_toman')) {
     }
 }
 
+if (!function_exists('rx_apply_renew_price')) {
+    /**
+     * Renewal-only: swap price_product for the product's renew_price when one is set (> 0).
+     * Call on a product row before fx_apply_to_product(); no-op for custom/unknown rows.
+     */
+    function rx_apply_renew_price($product)
+    {
+        if (!is_array($product) || !empty($product['_renew_applied'])) {
+            return $product;
+        }
+        $renew = $product['renew_price'] ?? null;
+        if (is_numeric($renew) && (float) $renew > 0) {
+            $product['list_price_product'] = $product['price_product'] ?? null;
+            $product['price_product'] = $renew;
+            $product['_renew_applied'] = 1;
+        }
+        return $product;
+    }
+}
+
 if (!function_exists('fx_apply_to_product')) {
     function fx_apply_to_product(array $product, array $panel): array
     {

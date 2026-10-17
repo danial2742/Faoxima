@@ -5583,6 +5583,7 @@ $caption";
 📌 اطلاعات محصول در حال ویرایش:
 نام محصول :  {$info_product['name_product']}
 قیمت محصول : " . rxFormatToman($info_product['price_product']) . "
+قیمت تمدید : " . (((float) ($info_product['renew_price'] ?? 0)) > 0 ? rxFormatToman($info_product['renew_price']) : 'همان قیمت محصول') . "
 حجم محصول : {$info_product['Volume_constraint']}
 موقعیت محصول : {$info_product['Location']}
 زمان محصول : {$info_product['Service_time']}
@@ -5611,6 +5612,24 @@ $caption";
     $stmt->bindParam(':agent', $user['Processing_value_tow']);
     $stmt->execute();
     nm_adminInstantReply($from_id, "✅ قیمت محصول بروزرسانی شد", $shopkeyboard, 'HTML');
+    step('home', $from_id);
+} elseif ($text == "قیمت تمدید" && $adminrulecheck['rule'] == "administrator") {
+    nm_adminInstantReply($from_id, "قیمت تمدید جدید را ارسال کنید (فقط عدد، تومان).\nعدد 0 یعنی تمدید با همان قیمت محصول انجام شود.", $backadmin, 'HTML');
+    step('change_renew_price', $from_id);
+} elseif ($user['step'] == "change_renew_price") {
+    if (!isset($update['message']) && empty($text)) { return; }
+    if (!ctype_digit($text)) {
+        nm_adminInstantReply($from_id, $textbotlang['Admin']['Product']['InvalidPrice'], $backadmin, 'HTML');
+        return;
+    }
+    $panel = select("marzban_panel", "*", "code_panel", $user['Processing_value_one'], "select");
+    $stmt = $pdo->prepare("UPDATE product SET renew_price = :renew_price WHERE id = :name_product AND (FIND_IN_SET(:Location, Location) > 0 OR Location = '/all') AND agent = :agent");
+    $stmt->bindParam(':renew_price', $text);
+    $stmt->bindParam(':name_product', $user['Processing_value']);
+    $stmt->bindParam(':Location', $panel['name_panel']);
+    $stmt->bindParam(':agent', $user['Processing_value_tow']);
+    $stmt->execute();
+    nm_adminInstantReply($from_id, "✅ قیمت تمدید محصول بروزرسانی شد", $shopkeyboard, 'HTML');
     step('home', $from_id);
 } elseif ($text == "یادداشت" && $adminrulecheck['rule'] == "administrator") {
     nm_adminInstantReply($from_id, "یادداشت جدید را ارسال کنید", $backadmin, 'HTML');

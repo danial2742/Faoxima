@@ -3064,6 +3064,7 @@ $nameconfig";
             if (is_array($hide_panel) && in_array($nameloc['Service_location'], $hide_panel)) {
                 error_log("Product {$result['code_product']} is marked hidden for {$nameloc['Service_location']} but was kept visible for extend.");
             }
+            $result = rx_apply_renew_price($result);
             $result = fx_apply_to_product($result, $marzban_list_get);
             if (intval($user['pricediscount']) != 0) {
                 $resultper = ($result['price_product'] * $user['pricediscount']) / 100;
@@ -3139,6 +3140,7 @@ $nameconfig";
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $nameloc['Service_location'], "select");
     $statusshowprice = panel_feature_enabled($marzban_list_get, 'showprice') ? "onshowprice" : "offshowprice";
     while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $result = rx_apply_renew_price($result);
         $result = fx_apply_to_product($result, $marzban_list_get);
         if (intval($user['pricediscount']) != 0) {
             $resultper = ($result['price_product'] * $user['pricediscount']) / 100;
@@ -3239,6 +3241,7 @@ $nameconfig";
     }
     $fxRenewKinds = $product['code_product'] === "customvolume" ? ['custom_volume', 'custom_time'] : 'product';
     if ($product['code_product'] !== "customvolume") {
+        $product = rx_apply_renew_price($product);
         $product = fx_apply_to_product($product, $marzban_list_get);
     }
     $product['price_product'] = fx_finalize_amount($product['price_product'], $marzban_list_get, $fxRenewKinds);
@@ -3352,6 +3355,7 @@ $nameconfig";
     $fxRenewCustom = ($nameloc['name_product'] == "🛍 حجم دلخواه" || $nameloc['name_product'] == "⚙️ سرویس دلخواه" || rxRenewalIsCustomCode($userdate['code_product'] ?? ''));
     $fxRenewKinds = $fxRenewCustom ? ['custom_volume', 'custom_time'] : 'product';
     if (!$fxRenewCustom && is_array($info_product)) {
+        $info_product = rx_apply_renew_price($info_product);
         $info_product = fx_apply_to_product($info_product, $marzban_list_get);
     }
     if (is_array($info_product) && isset($info_product['price_product'])) {
@@ -3444,6 +3448,7 @@ $nameconfig";
     $fxRenewCustom = ($nameloc['name_product'] == "🛍 حجم دلخواه" || $nameloc['name_product'] == "⚙️ سرویس دلخواه" || rxRenewalIsCustomCode($userdata['code_product'] ?? ''));
     $fxRenewKinds = $fxRenewCustom ? ['custom_volume', 'custom_time'] : 'product';
     if (!$fxRenewCustom) {
+        $prodcut = rx_apply_renew_price($prodcut);
         $prodcut = fx_apply_to_product($prodcut, $marzban_list_get);
     }
     $prodcut['price_product'] = fx_finalize_amount($prodcut['price_product'], $marzban_list_get, $fxRenewKinds);

@@ -52,6 +52,7 @@ final class ServiceRenewOptionsHandler extends BaseHandler
                 continue;
             }
 
+            $product = rx_apply_renew_price($product);
             $basePrice = $product['price_product'];
             $product = fx_apply_to_product($product, $panel);
             $price = (float)$product['price_product'];

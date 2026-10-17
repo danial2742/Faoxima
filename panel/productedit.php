@@ -57,6 +57,17 @@ if ($product == false) {
             update("product", "price_product", $price_product, "id", $id_product);
         }
 
+        $renew_price = htmlspecialchars((string)($_POST['renew_price'] ?? '0'), ENT_QUOTES, 'UTF-8');
+        $renew_price = str_replace(',', '', trim($renew_price));
+        if ($renew_price === '') {
+            $renew_price = '0';
+        }
+        if (!ctype_digit($renew_price)) {
+            $statusmessage = true; $infomesssage = "قیمت تمدید باید عدد باشد";
+        } elseif ((string)($product['renew_price'] ?? '0') !== $renew_price) {
+            update("product", "renew_price", $renew_price, "id", $id_product);
+        }
+
         $Volume_constraint = htmlspecialchars($_POST['Volume_constraint'], ENT_QUOTES, 'UTF-8');
         if (!is_numeric($Volume_constraint)) {
             $statusmessage = true; $infomesssage = "حجم محصول باید عدد باشد";
@@ -201,6 +212,11 @@ if ($product == false) {
                     <div class="form-group">
                         <label class="form-label">نام محصول</label>
                         <input type="text" name="name_product" class="form-control" value="<?php echo htmlspecialchars($product['name_product'], ENT_QUOTES, 'UTF-8'); ?>" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">قیمت تمدید (T) — ۰ یعنی همان قیمت محصول</label>
+                        <input type="text" name="renew_price" class="form-control" data-money value="<?php echo htmlspecialchars((string)($product['renew_price'] ?? '0'), ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
 
                     <div class="form-row">

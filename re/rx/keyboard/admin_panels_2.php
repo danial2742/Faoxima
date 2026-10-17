@@ -207,6 +207,9 @@ function KeyboardProduct($location,$query,$pricediscount,$datakeyboard,$statuscu
         }
 
 
+        if (strpos((string)$datakeyboard, 'serviceextendselects-') === 0) {
+            $result = rx_apply_renew_price($result);
+        }
         $result = fx_apply_to_product($result, $fxPanelRow);
         if(intval($pricediscount) != 0){
             $resultper = ($result['price_product'] * $pricediscount) / 100;
