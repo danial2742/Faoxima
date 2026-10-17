@@ -1932,30 +1932,17 @@ if (!function_exists('rx_is_wg_account')) {
     }
 }
 
-if (!function_exists('rx_send_amnezia_key')) {
+if (!function_exists('rx_amnezia_import_hint')) {
     /**
-     * After a WireGuard/AmneziaWG .conf is sent, also send the AmneziaVPN import key.
-     * Never throws; failure to build the key is silent.
+     * Caption hint telling users to import a WireGuard/AmneziaWG .conf file manually in AmneziaVPN.
+     * Empty string when $conf is not a WireGuard-style config.
      */
-    function rx_send_amnezia_key($chat_id, $conf, $description = '')
+    function rx_amnezia_import_hint($conf)
     {
-        $vpnKey = amnezia_vpn_key_from_conf($conf, $description);
-        if ($vpnKey === null) {
-            return;
+        if (!is_string($conf) || stripos($conf, '[Interface]') === false) {
+            return '';
         }
-        $hint = "🔑 کلید ورود به برنامه AmneziaVPN\nبرنامه AmneziaVPN را باز کنید، «افزودن سرور» (+) را بزنید، کلید زیر را کپی و وارد کنید.";
-        if (strlen($vpnKey) > 3500) {
-            $tmp = "{$chat_id}-" . bin2hex(random_bytes(3)) . '-amnezia-key.txt';
-            file_put_contents($tmp, $vpnKey);
-            telegram('sendDocument', array(
-                'chat_id' => $chat_id,
-                'document' => new CURLFile($tmp, 'text/plain', 'amnezia-key.txt'),
-                'caption' => $hint,
-            ));
-            unlink($tmp);
-            return;
-        }
-        sendmessage($chat_id, $hint . "\n\n<code>{$vpnKey}</code>", null, 'HTML');
+        return "\n\n📥 فایل را در برنامه AmneziaVPN با گزینه «افزودن سرور» (+) ← «فایل» وارد کنید.";
     }
 }
 

@@ -561,14 +561,11 @@ function sendMessageService($panel_info, $config, $sub_link, $username_service, 
                     telegram('sendDocument', [
                         'chat_id' => $user_id,
                         'document' => new CURLFile($manualFile, 'application/octet-stream', $publicName),
-                        'caption' => $thisCaption,
+                        'caption' => $thisCaption . (strtolower($ext) === 'conf' ? rx_amnezia_import_hint((string) ($fi['content'] ?? '')) : ''),
                         'reply_markup' => $fileReplyMarkup,
                         'parse_mode' => 'HTML',
                     ]);
                     @unlink($manualFile);
-                    if (strtolower($ext) === 'conf') {
-                        rx_send_amnezia_key($user_id, (string) ($fi['content'] ?? ''), $username_service);
-                    }
                 } else {
                     sendmessage($user_id, $thisCaption, $fileReplyMarkup, 'HTML');
                 }

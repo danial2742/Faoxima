@@ -2441,9 +2441,8 @@ $nameconfig";
         sendmessage($from_id, $textsub, $bakinfos, 'HTML');
         $urlimage = normalizeConfigFilename("{$marzban_list_get['inboundid']}-{$nameloc['username']}.conf", $marzban_list_get['namecustom'] ?? '', true);
         file_put_contents($urlimage, $DataUserOut['subscription_url']);
-        sendDocument($from_id, $urlimage, "⚙️ کانفیگ شما");
+        sendDocument($from_id, $urlimage, "⚙️ کانفیگ شما" . rx_amnezia_import_hint((string) $DataUserOut['subscription_url']));
         unlink($urlimage);
-        rx_send_amnezia_key($from_id, (string) $DataUserOut['subscription_url'], $nameloc['username']);
     } elseif ((!function_exists('isQrDisabled') || !isQrDisabled())
         && !(function_exists('nmPanelNationalEnabled') && nmPanelNationalEnabled($marzban_list_get))
         && trim((string) $subscriptionurl) !== '') {
@@ -2709,11 +2708,10 @@ $nameconfig";
                     telegram('sendDocument', [
                         'chat_id' => $from_id,
                         'document' => new CURLFile($allWgDest, 'application/octet-stream', $allWgName),
-                        'caption' => "⚙️ کانفیگ شما ({$allWgLabel})",
+                        'caption' => "⚙️ کانفیگ شما ({$allWgLabel})" . rx_amnezia_import_hint($allWgConf['conf']),
                         'parse_mode' => 'HTML',
                     ]);
                     unlink($allWgDest);
-                    rx_send_amnezia_key($from_id, $allWgConf['conf'], $nameloc['username']);
                     continue;
                 }
             }
@@ -2733,11 +2731,10 @@ $nameconfig";
         telegram('sendDocument', [
             'chat_id' => $from_id,
             'document' => new CURLFile($xuiFileDest, 'application/octet-stream', $xuiFileName),
-            'caption' => "⚙️ کانفیگ شما",
+            'caption' => "⚙️ کانفیگ شما" . rx_amnezia_import_hint((string) $singleConfigFile['value']),
             'parse_mode' => 'HTML',
         ]);
         unlink($xuiFileDest);
-        rx_send_amnezia_key($from_id, (string) $singleConfigFile['value'], $nameloc['username']);
         return;
     }
     if (function_exists('xui_wg_conf_from_link')) {
@@ -2750,11 +2747,10 @@ $nameconfig";
             telegram('sendDocument', [
                 'chat_id' => $from_id,
                 'document' => new CURLFile($xuiWgDest, 'application/octet-stream', $xuiWgName),
-                'caption' => "⚙️ کانفیگ شما ({$xuiWgLabel})",
+                'caption' => "⚙️ کانفیگ شما ({$xuiWgLabel})" . rx_amnezia_import_hint($xuiWgConf['conf']),
                 'parse_mode' => 'HTML',
             ]);
             unlink($xuiWgDest);
-            rx_send_amnezia_key($from_id, $xuiWgConf['conf'], $nameloc['username']);
             return;
         }
     }
