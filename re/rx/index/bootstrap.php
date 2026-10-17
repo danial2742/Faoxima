@@ -2012,6 +2012,9 @@ $nameconfig";
         if ($marzban['type'] == "x-ui_single" && rx_is_wg_account($DataUserOut['links'] ?? [], $DataUserOut['single_config_file'] ?? null)) {
             unset($keyboarddate['linksub']);
         }
+        if (rx_is_wg_account($DataUserOut['links'] ?? [], $DataUserOut['single_config_file'] ?? null)) {
+            unset($keyboarddate['changelink']);
+        }
         if ($marzban['type'] == "remnawave") {
             if (($marzban['remna_revoke'] ?? 'off') !== "on") {
                 unset($keyboarddate['changelink']);
@@ -3772,6 +3775,9 @@ $nameconfig";
     }
     if ($DataUserOut['status'] == "disabled" || $DataUserOut['status'] == "on_hold") {
         sendmessage($from_id, $datatextbot['dyn_errors_link_change_service_disabled'] ?? "❌ سرویس غیرفعال است و امکان تعویض لینک برای سرویس وجود ندارد.", null, 'html');
+        return;
+    }
+    if (rx_is_wg_account($DataUserOut['links'] ?? [], $DataUserOut['single_config_file'] ?? null)) {
         return;
     }
     $keyboardextend = json_encode([
