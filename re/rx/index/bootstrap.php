@@ -2585,6 +2585,10 @@ $nameconfig";
             sendmessage($from_id, $datatextbot['dyn_errors_config_read_error'] ?? "❌  خطا در خواندن اطلاعات کانفیگ با پشتیبانی در ارتباط باشید.", null, 'html');
             return;
         }
+        if (count($manualConfigs) === 1) {
+            $dataget = [$datain, $nameloc['id_invoice'], '0'];
+            goto rx_configget_body;
+        }
         Editmessagetext($from_id, $message_id, "📌 از لیست زیر یک کانفیگ را انتخاب استفاده نمایید.", keyboard_config($manualConfigs, $nameloc['id_invoice']));
         return;
     }
@@ -2613,6 +2617,10 @@ $nameconfig";
         sendmessage($from_id, keyboard_config_unavailable_text($DataUserOut), null, 'html');
         return;
     }
+    if (count($DataUserOut['links']) === 1) {
+        $dataget = [$datain, $nameloc['id_invoice'], '0'];
+        goto rx_configget_body;
+    }
     $configKeyboardRows = 0;
     $configKeyboard = keyboard_config($DataUserOut['links'], $nameloc['id_invoice'], true, 0, $configKeyboardRows);
     if ($configKeyboardRows === 0 || !is_string($configKeyboard)) {
@@ -2621,6 +2629,7 @@ $nameconfig";
     }
     Editmessagetext($from_id, $message_id, "📌 از لیست زیر یک کانفیگ را انتخاب استفاده نمایید.", $configKeyboard);
 } elseif (preg_match('/configget_(.*)_(.*)/', $datain, $dataget)) {
+    rx_configget_body:
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
 
