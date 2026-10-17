@@ -2840,6 +2840,15 @@ function generateUsername($from_id, $Metode, $username, $randomString, $text, $n
     }
     $panelCustomBase = trim($namecustome) !== '' && strtolower($namecustome) !== 'none' ? $namecustome : 'u' . $from_id;
     $requestedBase = trim($text) !== '' ? $text : $telegramUsernameBase;
+    // Auto-generated usernames are "RG." + random number; methods where the user types the name are left alone.
+    if (!in_array($Metode, ["نام کاربری دلخواه", "متن دلخواه کاربر + رندوم"], true)) {
+        $prefix = 'RG.';
+        $candidate = $prefix . random_int(100000, 999999);
+        for ($attempt = 0; $attempt < 10 && function_exists('rxTableValueExists') && rxTableValueExists('invoice', 'username', strtolower($candidate)); $attempt++) {
+            $candidate = $prefix . random_int(100000, 999999);
+        }
+        return $candidate;
+    }
     if ($Metode == "آیدی عددی + حروف و عدد رندوم") {
         return $from_id . "-" . $randomString;
     } elseif ($Metode == "نام کاربری + حروف و عدد رندوم") {
