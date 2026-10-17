@@ -2617,15 +2617,15 @@ $nameconfig";
         sendmessage($from_id, keyboard_config_unavailable_text($DataUserOut), null, 'html');
         return;
     }
-    if (count($DataUserOut['links']) === 1) {
-        $dataget = [$datain, $nameloc['id_invoice'], '0'];
-        goto rx_configget_body;
-    }
     $configKeyboardRows = 0;
     $configKeyboard = keyboard_config($DataUserOut['links'], $nameloc['id_invoice'], true, 0, $configKeyboardRows);
     if ($configKeyboardRows === 0 || !is_string($configKeyboard)) {
         sendmessage($from_id, keyboard_config_unavailable_text($DataUserOut, 'invalid'), null, 'html');
         return;
+    }
+    if ($configKeyboardRows === 1 && preg_match('/"configget_[^"]*?_(\d+)"/', $configKeyboard, $singleCfgMatch)) {
+        $dataget = [$datain, $nameloc['id_invoice'], $singleCfgMatch[1]];
+        goto rx_configget_body;
     }
     Editmessagetext($from_id, $message_id, "📌 از لیست زیر یک کانفیگ را انتخاب استفاده نمایید.", $configKeyboard);
 } elseif (preg_match('/configget_(.*)_(.*)/', $datain, $dataget)) {
