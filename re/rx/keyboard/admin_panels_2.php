@@ -493,9 +493,23 @@ function keyboard_config($config_split,$id_invoice,$back_active = true,$page = 0
 
     $rows = [];
     $config_split = is_array($config_split) ? $config_split : [];
+    // x-ui WG/AWG accounts get a synthetic xuifile:// / xuiawgfile:// placeholder in front of the
+    // subscription's own WG/AWG link; both resolve to the same account, so list it only once.
+    $hasRealWgLink = false;
+    if(function_exists('xui_wg_conf_from_link')){
+        foreach ($config_split as $candidate){
+            if(is_string($candidate) && !preg_match('#^xui(awg)?file://#i', $candidate) && is_array(xui_wg_conf_from_link($candidate))){
+                $hasRealWgLink = true;
+                break;
+            }
+        }
+    }
     foreach (array_values($config_split) as $i => $config){
         if(!is_string($config) || $config === ''){
             error_log('Invalid configuration entry encountered while building keyboard');
+            continue;
+        }
+        if($hasRealWgLink && preg_match('#^xui(awg)?file://#i', $config)){
             continue;
         }
 
